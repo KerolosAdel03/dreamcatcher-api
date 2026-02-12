@@ -1,37 +1,20 @@
 export default async function handler(req, res) {
   try {
 
-    // Step 1: Get Access Token
-    const authResponse = await fetch("https://atlas.propertyfinder.com/v1/oauth/token", {
-      method: "POST",
+    const credentials = Buffer
+      .from(`${process.env.PROPERTYFINDER_API_KEY}:${process.env.PROPERTYFINDER_API_SECRET}`)
+      .toString("base64");
+
+    const response = await fetch("https://atlas.propertyfinder.com/v1/listings", {
       headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        grant_type: "client_credentials",
-        client_id: process.env.PROPERTYFINDER_API_KEY,
-        client_secret: process.env.PROPERTYFINDER_API_SECRET
-      })
-    });
-
-    const authData = await authResponse.json();
-    const accessToken = authData.access_token;
-
-    if (!accessToken) {
-      return res.status(401).json(authData);
-    }
-
-    // Step 2: Fetch Listings using token
-    const listingsResponse = await fetch("https://atlas.propertyfinder.com/v1/listings", {
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
+        "Authorization": `Basic ${credentials}`,
         "Content-Type": "application/json"
       }
     });
 
-    const listingsData = await listingsResponse.json();
+    const data = await response.json();
 
-    res.status(200).json(listingsData);
+    res.status(200).json(data);
 
   } catch (error) {
     res.status(500).json({ error: "Error fetching listings" });
