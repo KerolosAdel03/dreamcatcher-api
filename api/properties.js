@@ -1,22 +1,26 @@
 export default async function handler(req, res) {
   try {
-
-    const credentials = Buffer
-      .from(`${process.env.PROPERTYFINDER_API_KEY}:${process.env.PROPERTYFINDER_API_SECRET}`)
-      .toString("base64");
-
-    const response = await fetch("https://atlas.propertyfinder.com/v1/listings", {
+    const tokenResponse = await fetch("https://atlas.propertyfinder.com/v1/auth/token", {
+      method: "POST",
       headers: {
-        "Authorization": `Basic ${credentials}`,
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        apiKey: process.env.PF_API_KEY,
+        apiSecret: process.env.PF_API_SECRET
+      })
     });
 
-    const data = await response.json();
+    const tokenData = await tokenResponse.json();
 
-    res.status(200).json(data);
+    return res.status(200).json({
+      envKeyExists: !!process.env.PF_API_KEY,
+      envSecretExists: !!process.env.PF_API_SECRET,
+      tokenResponse: tokenData
+    });
 
   } catch (error) {
-    res.status(500).json({ error: "Error fetching listings" });
+    return res.status(500).json({ error: error.message });
   }
 }
